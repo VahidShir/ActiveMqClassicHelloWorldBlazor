@@ -1,0 +1,67 @@
+﻿@page "/"
+@using Apache.NMS
+@using Apache.NMS.ActiveMQ
+@rendermode InteractiveServer
+@implements IDisposable
+
+<h2>ActiveMQ</h2>
+<h3>Producer</h3>
+
+<br />
+
+<div>
+    <input type="text" @bind-value="messageValue" />
+    <button class="btn btn-primary" @onclick="SendMessage">Send Message</button>
+</div>
+
+@code {
+    private string messageValue = "";
+    private IConnection connection;
+    private ISession session;
+    private IMessageProducer producer;
+
+    private void Init()
+    {
+        Uri connecturi = new Uri("activemq:tcp://localhost:61616");
+        ConnectionFactory connectionFactory = new ConnectionFactory(connecturi);
+
+        // Create a Connection
+        this.connection = connectionFactory.CreateConnection();
+        this.connection.Start();
+
+        // Create a Session
+        this.session = connection.CreateSession(AcknowledgementMode.AutoAcknowledge);
+
+        // Get the destination (Topic or Queue)
+        IDestination destination = this.session.GetQueue("my_queue");
+
+        // Create a MessageProducer from the Session to the Topic or Queue
+        this.producer = this.session.CreateProducer(destination);
+        this.producer.DeliveryMode = MsgDeliveryMode.NonPersistent;
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        Init();
+    }
+
+    private void SendMessage()
+    {
+        // Create a messages
+        ITextMessage message = session.CreateTextMessage(messageValue);
+
+        // Tell the producer to send the message
+        producer.Send(message);
+
+        messageValue = "";
+    }
+
+    public void Dispose()
+    {
+        // Clean up
+        session.Close();
+        connection.Close();
+    }
+}
