@@ -1,0 +1,77 @@
+﻿@page "/ConsumerWithResponse"
+@using Apache.NMS
+@using Apache.NMS.ActiveMQ
+@rendermode InteractiveServer
+@implements IDisposable
+@inject IConnectionFactory connectionFactory
+
+<h3>ActiveMQ</h3>
+
+<h3>Received Messages:</h3>
+
+<ul>
+	@foreach (var message in messages)
+	{
+		<li>@message</li>
+	}
+</ul>
+
+@code {
+	private IConnection connection;
+	private ISession session;
+	private IMessageConsumer consumer;
+	private List<string> messages = new();
+
+	private void Init()
+	{
+		// Create a Connection
+		connection = connectionFactory.CreateConnection();
+		connection.Start();
+
+		// Create a Session
+		session = connection.CreateSession(AcknowledgementMode.AutoAcknowledge);
+
+		// Get the destination (Topic or Queue)
+		IDestination destination = session.GetQueue("my_queue");
+
+		// Create a MessageProducer from the Session to the Topic or Queue
+		consumer = session.CreateConsumer(destination);
+		consumer.Listener += Consumer_Listener;
+
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		Init();
+	}
+
+	private async void Consumer_Listener(IMessage message)
+	{
+		var txtMessage = message as ITextMessage;
+		messages.Add(txtMessage.Text);
+
+		var responseMessage = session.CreateTextMessage(txtMessage.Text.ToUpper());
+
+		if (txtMessage.NMSReplyTo is IDestination responseDestination)
+		{
+			var producer = session.CreateProducer(responseDestination);
+
+			producer.Send(responseMessage);
+		}
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	public void Dispose()
+	{
+		// Clean up
+		if (consumer != null)
+		{
+			consumer.Listener -= Consumer_Listener;
+			consumer.Close();
+		}
+
+		session?.Close();
+		connection?.Close();
+	}
+}

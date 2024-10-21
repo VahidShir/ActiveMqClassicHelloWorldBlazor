@@ -3,6 +3,7 @@
 @using Apache.NMS.ActiveMQ
 @rendermode InteractiveServer
 @implements IDisposable
+@inject IConnectionFactory connectionFactory
 
 <h3>ActiveMQ</h3>
 
@@ -23,22 +24,23 @@
 
     private void Init()
     {
-        Uri connecturi = new Uri("activemq:tcp://localhost:61616");
-        ConnectionFactory connectionFactory = new ConnectionFactory(connecturi);
+        // Uri connecturi = new Uri("activemq:tcp://localhost:12810");
+        // ConnectionFactory connectionFactory = new ConnectionFactory(connecturi);
 
         // Create a Connection
-        this.connection = connectionFactory.CreateConnection();
-        this.connection.Start();
+        connection = connectionFactory.CreateConnection();
+        connection.Start();
 
         // Create a Session
         session = connection.CreateSession(AcknowledgementMode.AutoAcknowledge);
-
+        
         // Get the destination (Topic or Queue)
         IDestination destination = session.GetQueue("my_queue");
 
         // Create a MessageProducer from the Session to the Topic or Queue
         consumer = session.CreateConsumer(destination);
         consumer.Listener += Consumer_Listener;
+
     }
 
     protected override async Task OnInitializedAsync()
@@ -60,7 +62,7 @@
         if (consumer != null)
         {
             consumer.Listener -= Consumer_Listener;
-            consumer?.Close();
+            consumer.Close();
         }
 
         session?.Close();

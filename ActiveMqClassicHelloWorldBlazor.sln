@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35222.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActiveMqClassicHelloWorldBlazor.Producer", "ActiveMqClassicHelloWorldBlazor.Producer\ActiveMqClassicHelloWorldBlazor.Producer.csproj", "{5150D55D-1BFE-4B14-89E8-325002012DD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ActiveMqClassicHelloWorldBlazor.Producer", "ActiveMqClassicHelloWorldBlazor.Producer\ActiveMqClassicHelloWorldBlazor.Producer.csproj", "{5150D55D-1BFE-4B14-89E8-325002012DD7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActiveMqClassicHelloWorldBlazor.Consumer", "ActiveMqClassicHelloWorldBlazor.Consumer\ActiveMqClassicHelloWorldBlazor.Consumer.csproj", "{E986FEED-81F6-4911-B59E-57EDA86A6632}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ActiveMqClassicHelloWorldBlazor.Consumer", "ActiveMqClassicHelloWorldBlazor.Consumer\ActiveMqClassicHelloWorldBlazor.Consumer.csproj", "{E986FEED-81F6-4911-B59E-57EDA86A6632}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

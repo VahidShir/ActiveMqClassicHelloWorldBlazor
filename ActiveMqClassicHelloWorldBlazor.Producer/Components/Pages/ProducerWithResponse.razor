@@ -1,4 +1,5 @@
-﻿@page "/"
+﻿@page "/ProducerWithResponse"
+
 @using Apache.NMS
 @using Apache.NMS.ActiveMQ
 @rendermode InteractiveServer
@@ -6,20 +7,25 @@
 @inject IConnectionFactory connectionFactory
 
 <h2>ActiveMQ</h2>
-<h3>Producer</h3>
+<h3>Consumer with response</h3>
 
 <br />
 
 <div>
     <input type="text" @bind-value="messageValue" />
     <button class="btn btn-primary" @onclick="SendMessage">Send Message</button>
+    <br/>
+    <span>Response: @response</span>
 </div>
 
 @code {
     private string messageValue = "";
+    private string response = "";
     private IConnection connection;
     private ISession session;
     private IMessageProducer producer;
+    private IDestination destination;
+    private IDestination responseDestination;
 
     private void Init()
     {
@@ -31,14 +37,15 @@
         connection.Start();
 
         // Create a Session
-        this.session = connection.CreateSession(AcknowledgementMode.AutoAcknowledge);
+        session = connection.CreateSession(AcknowledgementMode.AutoAcknowledge);
 
         // Get the destination (Topic or Queue)
-        IDestination destination = this.session.GetQueue("my_queue");
+        destination = session.GetQueue("my_queue");
+        // responseDestination = session.CreateTemporaryQueue();
 
         // Create a MessageProducer from the Session to the Topic or Queue
-        this.producer = this.session.CreateProducer(destination);
-        this.producer.DeliveryMode = MsgDeliveryMode.NonPersistent;
+        producer = session.CreateProducer(destination);
+        producer.DeliveryMode = MsgDeliveryMode.NonPersistent;
     }
 
     protected override void OnInitialized()
@@ -48,15 +55,22 @@
         Init();
     }
 
-    private void SendMessage()
+    private async Task SendMessage()
     {
         // Create a messages
-        ITextMessage message = session.CreateTextMessage(messageValue);
+        responseDestination = session.CreateTemporaryQueue();
 
+        ITextMessage message = session.CreateTextMessage(messageValue);
+        message.NMSReplyTo = responseDestination;
         // Tell the producer to send the message
         producer.Send(message);
 
         messageValue = "";
+
+        var consumer = session.CreateConsumer(responseDestination);
+        var responseMessage = consumer.Receive(TimeSpan.FromSeconds(10)) as ITextMessage;
+        response = responseMessage?.Text;
+        await InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()

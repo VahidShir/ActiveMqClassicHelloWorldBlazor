@@ -1,4 +1,6 @@
 using ActiveMqClassicHelloWorldBlazor.Consumer.Components;
+using Apache.NMS;
+using Apache.NMS.ActiveMQ;
 
 namespace ActiveMqClassicHelloWorldBlazor.Consumer;
 public class Program
@@ -10,6 +12,8 @@ public class Program
         // Add services to the container.
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
+
+        builder.Services.AddSingleton<IConnectionFactory>(new ConnectionFactory("activemq:tcp://localhost:12810"));
 
         var app = builder.Build();
 
