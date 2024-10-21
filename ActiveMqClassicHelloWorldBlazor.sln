@@ -7,6 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ActiveMqClassicHelloWorldBl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ActiveMqClassicHelloWorldBlazor.Consumer", "ActiveMqClassicHelloWorldBlazor.Consumer\ActiveMqClassicHelloWorldBlazor.Consumer.csproj", "{E986FEED-81F6-4911-B59E-57EDA86A6632}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{2412A5C6-0ABE-4EB9-B425-DF2C547994B0}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
