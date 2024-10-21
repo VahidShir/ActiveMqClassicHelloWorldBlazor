@@ -54,6 +54,8 @@
 
 		if (txtMessage.NMSReplyTo is IDestination responseDestination)
 		{
+			responseMessage.NMSCorrelationID = txtMessage.NMSCorrelationID;
+
 			var producer = session.CreateProducer(responseDestination);
 
 			producer.Send(responseMessage);

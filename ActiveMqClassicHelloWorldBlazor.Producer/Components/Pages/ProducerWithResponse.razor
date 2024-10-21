@@ -12,71 +12,78 @@
 <br />
 
 <div>
-    <input type="text" @bind-value="messageValue" />
-    <button class="btn btn-primary" @onclick="SendMessage">Send Message</button>
-    <br/>
-    <span>Response: @response</span>
+	<input type="text" @bind-value="messageValue" />
+	<button class="btn btn-primary" @onclick="SendMessage">Send Message</button>
+	<br />
+	<span>Response: @response</span>
 </div>
 
 @code {
-    private string messageValue = "";
-    private string response = "";
-    private IConnection connection;
-    private ISession session;
-    private IMessageProducer producer;
-    private IDestination destination;
-    private IDestination responseDestination;
+	private string messageValue = "";
+	private string response = "";
+	private IConnection connection;
+	private ISession session;
+	private IMessageProducer producer;
+	private IDestination destination;
+	private IDestination responseDestination;
 
-    private void Init()
-    {
-        // Uri connecturi = new Uri("activemq:tcp://localhost:12810");
-        // ConnectionFactory connectionFactory = new ConnectionFactory(connecturi);
+	private void Init()
+	{
+		// Uri connecturi = new Uri("activemq:tcp://localhost:12810");
+		// ConnectionFactory connectionFactory = new ConnectionFactory(connecturi);
 
-        // Create a Connection
-        connection = connectionFactory.CreateConnection();
-        connection.Start();
+		// Create a Connection
+		connection = connectionFactory.CreateConnection();
+		connection.Start();
 
-        // Create a Session
-        session = connection.CreateSession(AcknowledgementMode.AutoAcknowledge);
+		// Create a Session
+		session = connection.CreateSession(AcknowledgementMode.AutoAcknowledge);
 
-        // Get the destination (Topic or Queue)
-        destination = session.GetQueue("my_queue");
-        // responseDestination = session.CreateTemporaryQueue();
+		// Get the destination (Topic or Queue)
+		destination = session.GetQueue("my_queue");
+		// responseDestination = session.CreateTemporaryQueue();
 
-        // Create a MessageProducer from the Session to the Topic or Queue
-        producer = session.CreateProducer(destination);
-        producer.DeliveryMode = MsgDeliveryMode.NonPersistent;
-    }
+		// Create a MessageProducer from the Session to the Topic or Queue
+		producer = session.CreateProducer(destination);
+		producer.DeliveryMode = MsgDeliveryMode.NonPersistent;
+	}
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
 
-        Init();
-    }
+		Init();
+	}
 
-    private async Task SendMessage()
-    {
-        // Create a messages
-        responseDestination = session.CreateTemporaryQueue();
+	private async Task SendMessage()
+	{
+		// Create a messages
+		responseDestination = session.CreateTemporaryQueue();
 
-        ITextMessage message = session.CreateTextMessage(messageValue);
-        message.NMSReplyTo = responseDestination;
-        // Tell the producer to send the message
-        producer.Send(message);
+		ITextMessage message = session.CreateTextMessage(messageValue);
 
-        messageValue = "";
+		var correlationId = Guid.NewGuid().ToString();
 
-        var consumer = session.CreateConsumer(responseDestination);
-        var responseMessage = consumer.Receive(TimeSpan.FromSeconds(10)) as ITextMessage;
-        response = responseMessage?.Text;
-        await InvokeAsync(StateHasChanged);
-    }
+		message.NMSReplyTo = responseDestination;
+		message.NMSCorrelationID = correlationId;
+		// Tell the producer to send the message
+		producer.Send(message);
 
-    public void Dispose()
-    {
-        // Clean up
-        session?.Close();
-        connection?.Close();
-    }
+		messageValue = "";
+
+		var consumer = session.CreateConsumer(responseDestination);
+		var responseMessage = consumer.Receive(TimeSpan.FromSeconds(10)) as ITextMessage;
+		if (responseMessage != null && responseMessage.NMSCorrelationID == correlationId)
+		{
+			response = responseMessage?.Text;
+			await InvokeAsync(StateHasChanged);
+		}
+	}
+
+	public void Dispose()
+	{
+		// Clean up
+		session?.Close();
+		connection?.Close();
+	}
 }
